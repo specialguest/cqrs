@@ -23,9 +23,25 @@ services:
 
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
-    App\Controller\:
-        resource: '../src/Controller/'
-        tags: ['controller.service_arguments']
+    #App\Controller\:
+    #    resource: '../src/Controller/'
+    #    tags: ['controller.service_arguments']
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    _instanceof:
+        App\Common\CQRS\CommandHandlerInterface:
+            tags:
+                - { name: messenger.message_handler, bus: command_bus }
+        App\Common\CQRS\QueryHandlerInterface:
+            tags:
+                - { name: messenger.message_handler, bus: query_bus }
+
+    messenger.middleware.doctrine_transaction:
+        class: Symfony\Bridge\Doctrine\Messenger\DoctrineTransactionMiddleware
+        # Definition is abstract, so a child definition will be created, per bus
+        abstract: true
+        # Main dependencies are defined by the parent definitions.
+        # Arguments provided in the middleware config will be appended on the child definition.
+        arguments: ['@doctrine']
